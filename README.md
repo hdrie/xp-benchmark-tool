@@ -1,5 +1,6 @@
 # xp-benchmark-tool
 X-Plane 12 Benchmarking for Windows
+using https://www.x-plane.com/kb/frame-rate-test/
 
 ## Scope
 Attempt to match https://github.com/hdrie/x-plane-utility-scripts/blob/master/Linux%20benchmarking/X-Plane12_Bench.sh
