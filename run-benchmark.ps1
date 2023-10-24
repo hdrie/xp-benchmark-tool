@@ -4,9 +4,9 @@
 # CONFIGURATION / PARAMETERS
 #   Input/Output files
 #   Benchmark options
-$execPath="x-plane.exe"
-$replayPath="Output/replays/test_flight_737.fps"
-$logPath="Log.txt"
+$execPath='x-plane.exe'
+$replayPath='Output/replays/test_flight_737.fps'
+$logPath='Log.txt'
 $benchCodes=1,2,3,4,5
 
 # FUNCTION DEFINITIONS
@@ -16,8 +16,10 @@ $benchCodes=1,2,3,4,5
 #   Write/append output csv file
 function runExec {
     param (
-        $exec
-        $args
+        [Parameter(Mandatory=$true, Position=0)]
+        [string] $exec
+        [Parameter(Mandatory=$true, Position=1)]
+        [string] $args
     )
     Start-Process -FilePath $exec -ArgumentList $args -Wait
 }
@@ -28,5 +30,5 @@ function runExec {
 #   Read and write system config and benchmark results
 
 foreach ($code in $benchCodes) {
-    runExec -exec $execPath -args "‐‐fps_test=$code ‐‐load_smo=$replayPath"
+    runExec -exec $execPath -args "--fps_test=$code --load_smo=$replayPath"
 }
