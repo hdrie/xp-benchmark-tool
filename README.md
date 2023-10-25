@@ -7,7 +7,7 @@ Attempt to match https://github.com/hdrie/x-plane-utility-scripts/blob/master/Li
 - Configurable Powershell script
 - Launch series of X-Plane built-in benchmarks using command line arguments
 - Read system configuration info
-- write structured results to .csv
+- Planned feature: write structured results to .csv
 
 ## Notes
 - Running PS scripts may be blocked by default. For changing the execution policy see https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies?view=powershell-7.3
