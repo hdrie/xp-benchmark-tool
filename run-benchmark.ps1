@@ -8,7 +8,7 @@ $execPath='./x-plane.exe'
 $replayPath='Output/replays/test_flight_737.fps'
 $logPath='./Log.txt'
 $resultsPath='./ZZ_BenchResults.txt'
-$benchCodes=41
+$benchCodes=1,3,5,41,43,45
 $launchArguments="--weather_seed=1 --time_seed=1"
 
 # FUNCTION DEFINITIONS
@@ -24,7 +24,7 @@ function runExec {
     Start-Process -FilePath $exec -ArgumentList $args -Wait
 }
 
-#   Read benchmark results from Log.txt
+#   Read benchmark results from Log.txt, returns a string
 function getResults {
     param (
         [Parameter(Mandatory=$true, Position=0)]
@@ -33,22 +33,33 @@ function getResults {
     return (Get-Content $logFile | Select-String -Pattern 'FRAMERATE TEST:','GPU LOAD:' | Out-String).trim()
 }
 
-#   Read hardware config, does nothing yet
+#   Read hardware config from Log.txt, returns a string
 function getHWconf {
     param (
         [Parameter(Mandatory=$true, Position=0)]
         [string] $logFile
     )
-    return "ExampleHWconf"
+    # $cpu=$(Get-CimInstance -ClassName Win32_Processor)[0].Name # We could also get the cpu name from the system, instead of Log.txt
+    (Get-Content $logFile | Out-String) -match 'CPU 0: (.+)\s+Speed.+' | out-null
+    $cpu=$matches[1]
+    (Get-Content $logFile | Out-String) -match 'Vulkan Device\s+: (.+)' | out-null
+    $gpu=$matches[1]
+    (Get-Content $logFile | Out-String) -match 'Physical Memory \(total for computer\): (\d+)' | out-null
+    $ram=([float]$matches[1]/1024000000).tostring("#.#")
+    return "CPU: $cpu`nGPU: $gpu`nSystem Memory: $ram GB"
 }
 
-#   Read software config, only X-Plane version atm
+#   Read software config:
+#   - X-Plane Version
+#   - Zink setting
 function getSWconf {
     param (
         [Parameter(Mandatory=$true, Position=0)]
         [string] $logFile
     )
-    return (Get-Content Log.txt -First 1).Split(' ')[3]
+    $xpVer=$(Get-Content $logFile -First 1).Split(' ')[3]
+    $zinkOn=$(Get-Content $logFile | Select-String -Pattern 'OpenGL Render' | Out-String) -match 'zink'
+    return "X-Plane Version: $xpVer`nZink: $zinkOn"
 }
 
 # SCRIPT EXECUTION
