@@ -45,7 +45,7 @@ function getHWconf {
     (Get-Content $logFile | Out-String) -match 'Vulkan Device\s+: (.+)' | out-null
     $gpu=$matches[1]
     (Get-Content $logFile | Out-String) -match 'Physical Memory \(total for computer\): (\d+)' | out-null
-    $ram=([float]$matches[1]/(1024*1024*1024).tostring("#.#"))
+    $ram=([float]$matches[1]/(1024*1024*1024)).tostring("#.#")
     return "CPU: $cpu`nGPU: $gpu`nSystem Memory: $ram GB"
 }
 
