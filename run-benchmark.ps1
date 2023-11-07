@@ -69,6 +69,28 @@ function getSysConf {
     return "X-Plane Version: $xpVer`nZink: $zinkOn`nCPU: $cpu`nGPU: $gpu`nRAM: $ram GB"
 }
 
+
+function promptUser{
+    # takes user input as yes or no and stores in $choice var
+    $choice = Read-Host "Would you like to run the next benchmark? (yes/no)"
+    
+    # switch statemnent to determine behavior based on user input
+    switch ($choice.ToLower()) {
+        "yes" {
+            Write-Host "Continuing on with next benchmark."
+            return $true
+        }
+        "no" {
+            Write-Host "Exiting."
+            return $false
+        }
+        default {
+            Write-Host "Invalid choice. Please enter 'yes' or 'no'."
+            promptUser
+        }
+    }
+}
+
 # -------------------------------------------------------------------------------------------
 # IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
 # -------------------------------------------------------------------------------------------
@@ -104,5 +126,12 @@ foreach ($code in $benchCodes) {
     $results = getResults -logFile $logPath
     # Write config and results to File
     Add-Content -Path $txtOutPath -Value $results
+
+    # Prompts the user by calling promptUser function. If they choose to continue, loop moves to next iteration. if not, loop breaks.
+    if (promptUser){
+    }
+    else{
+        break 
+    }
 }
 Add-Content -Path $txtOutPath -Value "-------------------------`nEND SESSION: $(Get-Date -UFormat "%m/%d/%Y %R")"
