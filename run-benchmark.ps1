@@ -8,6 +8,10 @@
 # CONFIGURATION / PARAMETERS
 #   Input/Output files
 #   Benchmark options
+
+# Set $true to prompt between benchmarks, otherwise set $false
+$configPromptUser = $true 
+
 $execPath='./x-plane.exe'
 $replayPath='Output/replays/test_flight_737.fps'
 $logPath='./Log.txt'
@@ -69,24 +73,24 @@ function getSysConf {
     return "X-Plane Version: $xpVer`nZink: $zinkOn`nCPU: $cpu`nGPU: $gpu`nRAM: $ram GB"
 }
 
-
+# Prompt user between benchmark runs
 function promptUser{
     # takes user input as yes or no and stores in $choice var
-    $choice = Read-Host "Would you like to run the next benchmark? (yes/no)"
+    $userChoice = Read-Host "Hit any key to move onto next benchmark. To cancel, type 'n'"
     
     # switch statemnent to determine behavior based on user input
-    switch ($choice.ToLower()) {
-        "yes" {
-            Write-Host "Continuing on with next benchmark."
-            return $true
+    switch ($userChoice) {
+        "n" {
+            Write-Host "Exiting."
+            return $false
         }
         "no" {
             Write-Host "Exiting."
             return $false
         }
         default {
-            Write-Host "Invalid choice. Please enter 'yes' or 'no'."
-            promptUser
+            Write-Host "Continuing on with next benchmark."
+            return $true
         }
     }
 }
@@ -128,10 +132,12 @@ foreach ($code in $benchCodes) {
     Add-Content -Path $txtOutPath -Value $results
 
     # Prompts the user by calling promptUser function. If they choose to continue, loop moves to next iteration. if not, loop breaks.
-    if (promptUser){
+    if ($configPromptUser){
+        if(promptUser){
     }
     else{
         break 
     }
+  }
 }
 Add-Content -Path $txtOutPath -Value "-------------------------`nEND SESSION: $(Get-Date -UFormat "%m/%d/%Y %R")"
