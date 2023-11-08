@@ -15,7 +15,12 @@ $configPromptUser = $true
 $execPath='./x-plane.exe'
 $replayPath='Output/replays/test_flight_737.fps'
 $logPath='./Log.txt'
-$txtOutPath='./ZZ_BenchResults.txt'
+$txtOutPath='./ZZ_BenchResults.txt' # Set the filename for text output
+
+$writeCsv=$false # Set to true, if you want to create entries to a .csv file
+$csvOutPath='./ZZZ_BenchResults.csv'
+$usrComment='' # Enter an optional user comment to recognize your benchmark session later
+
 $launchArguments="--load_smo=$replayPath --weather_seed=1 --time_seed=1"
 
 $benchCodes=1,3,5,41,43,45
@@ -50,14 +55,19 @@ function getResults {
 function getSysConf {
     param (
         [Parameter(Mandatory=$true, Position=0)]
-        [string] $logFile
+        [string] $logFile,
+        [Parameter(Mandatory=$false, Position=1)]
+        [string] $outputType
     )
     # Software
     #   X-Plane Version
     $xpVer=$(Get-Content $logFile -First 1).Split(' ')[3]
     #   Zink setting
     $zinkOn=$(Get-Content $logFile | Select-String -Pattern 'OpenGL Render' | Out-String) -match 'zink'
-    
+    # If outputType 'csv' is requested, only return software props hashtable
+    if ($outputType -eq 'csv') {
+        return @{xpVersion = $xpver ; zink = $zinkOn}
+    }
     # Hardware
     #   CPU Device
     #$cpu=$(Get-CimInstance -ClassName Win32_Processor)[0].Name # We could also get the cpu name from the system, instead of Log.txt
@@ -71,6 +81,25 @@ function getSysConf {
     $ram=([float]$matches[1]/(1024*1024*1024)).tostring("#.#")
 
     return "X-Plane Version: $xpVer`nZink: $zinkOn`nCPU: $cpu`nGPU: $gpu`nRAM: $ram GB"
+}
+
+# Function to create hastable from benchmark results String
+function getResultsCsvItems {
+    param (
+        [Parameter(Mandatory=$true, Position=0)]
+        [string] $resultsStr
+    )
+    $parseStr = $resultsStr -replace "`r`n" , " " # create single line string
+    $parseStr -match "FRAMERATE TEST: time=(.+), frames=(.+), fps=(.+) GPU LOAD: time=(.+), wait=(.+), load=(.+)%" | out-null
+    $resultsHT = @{
+        time = $matches[1]
+        frames = $matches[2]
+        fps = $matches[3]
+        gpu_time = $matches[4]
+        gpu_wait = $matches[5]
+        gpu_load = $matches[6]
+    }
+    return $resultsHT
 }
 
 # Prompt user between benchmark runs
@@ -130,6 +159,16 @@ foreach ($code in $benchCodes) {
     $results = getResults -logFile $logPath
     # Write config and results to File
     Add-Content -Path $txtOutPath -Value $results
+
+    # Optionally create hashtable with relevant items and write to specified .csv file path
+    if ($writeCsv) {
+        $csvOutput = $(getResultsCsvItems -resultsStr $results) + $(getSysConf -logFile $logPath -outputType 'csv')
+        $csvOutput.add('date' , $(Get-Date -Format "yyyy-MM-dd'T'HH:mmK")) # add a timestamp in ISO 8601 format
+        $csvOutput.add('comment' , $usrComment)
+        $csvOutput.add('benchCode' , $code)
+        # Convert hashtable to object and pipe to export-csv, creating the file or appending to it
+        $csvOutput | ForEach-Object{ [pscustomobject]$_ } | Export-CSV -Path $csvOutPath -NoTypeInformation -Append
+    }
 
     # Prompts the user by calling promptUser function. If they choose to continue, loop moves to next iteration. if not, loop breaks.
     if ($configPromptUser){
