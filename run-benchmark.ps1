@@ -160,7 +160,7 @@ foreach ($code in $benchCodes) {
         Add-Content -Path $txtOutPath -Value $sysConfig
         $readConfig=$false
     }
-    # Get results from Log.txt, specifying benchmark code
+    # Get results from Log.txt, specifying benchmark preset
     Add-Content -Path $txtOutPath -Value "`nBenchmark Preset: $code" 
     $results = getResults -logFile $logPath
     # Write config and results to File
@@ -171,7 +171,7 @@ foreach ($code in $benchCodes) {
         $csvOutput = $(getResultsCsvItems -resultsStr $results) + $(getSysConf -logFile $logPath -outputType 'csv')
         $csvOutput.add('date' , $(Get-Date -Format "yyyy-MM-dd'T'HH:mmK")) # add a timestamp in ISO 8601 format
         $csvOutput.add('comment' , $usrComment)
-        $csvOutput.add('benchCode' , $code)
+        $csvOutput.add('benchPreset' , $code)
         # Convert hashtable to object and pipe to export-csv, creating the file or appending to it
         $csvOutput | ForEach-Object{ [pscustomobject]$_ } | Export-CSV -Path $csvOutPath -NoTypeInformation -Append
     }
