@@ -10,14 +10,18 @@
 #   Benchmark options
 
 # Set $true to prompt between benchmarks, otherwise set $false
-$configPromptUser = $true 
+$configPromptUser = $false 
 
+# File paths. You shouldn't need to change these
 $execPath='./x-plane.exe'
 $replayPath='Output/replays/test_flight_737.fps'
 $logPath='./Log.txt'
 $txtOutPath='./ZZ_BenchResults.txt'
+
+# Command line arguments (besides --fps_test) to run the executable with
 $launchArguments="--load_smo=$replayPath --weather_seed=1 --time_seed=1"
 
+# Specify benchmark presets to run, for more info, see https://www.x-plane.com/kb/frame-rate-test/
 $benchCodes=1,3,5,41,43,45
 
 # -------------------------------------------------------------------------------------------
@@ -116,9 +120,12 @@ Add-Content -Path $txtOutPath -Value "-------------------------`nBEGIN SESSION: 
 # Switch to read the system configuration once every session (switch will turn false after first bench run)
 $readConfig=$true
 
-# Run the benchmarks, looping through the specified bench codes
+# Run the benchmarks, looping through the specified bench presets
 foreach ($code in $benchCodes) {
+
+    # Run x-plane.exe
     runExec -exec $execPath -args "--fps_test=$code $launchArguments"
+    
     if ($readConfig) {
         # Read and write the system configuration once every session
         $sysConfig = getSysConf -logFile $logPath
@@ -126,7 +133,7 @@ foreach ($code in $benchCodes) {
         $readConfig=$false
     }
     # Get results from Log.txt, specifying benchmark code
-    Add-Content -Path $txtOutPath -Value "`nBenchmark Code: $code" 
+    Add-Content -Path $txtOutPath -Value "`nBenchmark Preset: $code" 
     $results = getResults -logFile $logPath
     # Write config and results to File
     Add-Content -Path $txtOutPath -Value $results
