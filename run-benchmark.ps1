@@ -28,6 +28,13 @@ $launchArguments="--load_smo=$replayPath --weather_seed=1 --time_seed=1"
 # Specify benchmark presets to run, for more info, see https://www.x-plane.com/kb/frame-rate-test/
 $benchCodes=1,3,5,41,43,45
 
+#Regex strings for Log.txt parsing, do not change
+$cpuRegex='CPU 0: (.+)\s+Speed.+'
+$gpuRegex='Vulkan Device\s+: (.+)'
+$ramRegex='Physical Memory \(total for computer\): (\d+)'
+$resultsRegex='FRAMERATE TEST:(?:,?\s[a-zA-Z]+=[0-9]*(?:\.[0-9]+)?%?)+.*(?:\r\n)?.*GPU LOAD:(?:,?\s[a-zA-Z]+=[0-9]*(?:\.[0-9]+)?%?)+'
+$captResultsRegex='FRAMERATE TEST: time=([0-9]*(?:\.[0-9]+)?), frames=([0-9]*(?:\.[0-9]+)?), fps=([0-9]*(?:\.[0-9]+)?).* .*GPU LOAD: time=([0-9]*(?:\.[0-9]+)?), wait=([0-9]*(?:\.[0-9]+)?), load=([0-9]*(?:\.[0-9]+)?)%'
+
 # -------------------------------------------------------------------------------------------
 # IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
 # -------------------------------------------------------------------------------------------
@@ -51,7 +58,13 @@ function getResults {
         [Parameter(Mandatory=$true, Position=0)]
         [string] $logFile
     )
-    return (Get-Content $logFile | Select-String -Pattern 'FRAMERATE TEST:','GPU LOAD:' | Out-String).trim()
+    if ((Get-Content $logFile | Out-String) -match $resultsRegex) {
+        return $matches[0]
+    }
+    else {
+        Write-Host 'Could not obtain results string'
+        return 'No matches for string pattern in Log.txt'
+    }
 }
 
 #   Read System Configuration
@@ -74,13 +87,13 @@ function getSysConf {
     # Hardware
     #   CPU Device
     #$cpu=$(Get-CimInstance -ClassName Win32_Processor)[0].Name # We could also get the cpu name from the system, instead of Log.txt
-    (Get-Content $logFile | Out-String) -match 'CPU 0: (.+)\s+Speed.+' | out-null
+    (Get-Content $logFile | Out-String) -match $cpuRegex | out-null
     $cpu=$matches[1]
     #   GPU Device
-    (Get-Content $logFile | Out-String) -match 'Vulkan Device\s+: (.+)' | out-null
+    (Get-Content $logFile | Out-String) -match $gpuRegex | out-null
     $gpu=$matches[1]
     #   RAM amount
-    (Get-Content $logFile | Out-String) -match 'Physical Memory \(total for computer\): (\d+)' | out-null
+    (Get-Content $logFile | Out-String) -match $ramRegex | out-null
     $ram=([float]$matches[1]/(1024*1024*1024)).tostring("#.#")
 
     return "X-Plane Version: $xpVer`nZink: $zinkOn`nCPU: $cpu`nGPU: $gpu`nRAM: $ram GB"
@@ -93,16 +106,29 @@ function getResultsCsvItems {
         [string] $resultsStr
     )
     $parseStr = $resultsStr -replace "`r`n" , " " # create single line string
-    $parseStr -match "FRAMERATE TEST: time=(.+), frames=(.+), fps=(.+) GPU LOAD: time=(.+), wait=(.+), load=(.+)%" | out-null
-    $resultsHT = @{
-        time = $matches[1]
-        frames = $matches[2]
-        fps = $matches[3]
-        gpu_time = $matches[4]
-        gpu_wait = $matches[5]
-        gpu_load = $matches[6]
+    if ($parseStr -match $captResultsRegex) {
+        $resultsHT = @{
+            time = $matches[1]
+            frames = $matches[2]
+            fps = $matches[3]
+            gpu_time = $matches[4]
+            gpu_wait = $matches[5]
+            gpu_load = $matches[6]
+        }
+        return $resultsHT
     }
-    return $resultsHT
+    else {
+        Write-Host "Unexpected results string:`r`n$resultsStr"
+        $resultsHT = @{
+            time = 'NaN'
+            frames = 'NaN'
+            fps = 'NaN'
+            gpu_time = 'NaN'
+            gpu_wait = 'NaN'
+            gpu_load = 'NaN'
+        }
+        return $resultsHT
+    }
 }
 
 # Prompt user between benchmark runs
