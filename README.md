@@ -8,7 +8,7 @@ using the 'canned' benchmark https://www.x-plane.com/kb/frame-rate-test/
     - Benchmark results
     - X-Plane version and 'zink' status
     - Hardware configuration (CPU, GPU, RAM)
-- Write a neatly formatted summary of the obtained info to an output .txt file
+- Write a neatly formatted summary of the obtained info to an output .txt file and, optionally, to .csv
 
 ## Using the script
 - Download 'run-benchmark.ps1' and move it to your X-Plane 12 root folder next to the game executable.
@@ -17,7 +17,8 @@ using the 'canned' benchmark https://www.x-plane.com/kb/frame-rate-test/
     - configPromptUser: Set to true, if you want a to be prompted to continue after every run
     - benchCodes: Set a list of benchmark codes to run.
     - Path variables: These are already configured correctly
-- Open a Powershell commmand line prompt and type: 'powershell ./run-benchmark.ps1'
+    - writeCsv: Set to true, if you want to add entries to a .csv file (it will be automatically created for you)
+- Open a Powershell commmand line prompt and type: 'powershell ./run-benchmark.ps1' The script will keep running benchmarks until the list in benchCodes has been finished.
 
 ## Notes
 - Running PS scripts may be blocked by default. For changing the execution policy see https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies?view=powershell-7.3
