@@ -29,7 +29,7 @@ $launchArguments="--load_smo=$replayPath --weather_seed=1 --time_seed=1"
 $benchCodes=1,3,5,41,43,45
 
 #Regex strings for Log.txt parsing, do not change
-$cpuRegex='CPU 0: (.+)\s+Speed.+'
+$cpuRegex='CPU type: (.+) - Speed.+'
 $gpuRegex='Vulkan Device\s+: (.+)'
 $ramRegex='Physical Memory \(total for computer\): (\d+)'
 $resultsRegex='FRAMERATE TEST:(?:,?\s[a-zA-Z]+=[0-9]*(?:\.[0-9]+)?%?)+.*(?:\r\n)?.*GPU LOAD:(?:,?\s[a-zA-Z]+=[0-9]*(?:\.[0-9]+)?%?)+'
